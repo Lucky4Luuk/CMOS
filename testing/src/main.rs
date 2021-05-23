@@ -13,7 +13,6 @@ use cmos_rtc::{ReadRTC, Time};
 pub extern "C" fn _start() -> ! {
     #[cfg(test)]
     test_main();
-
     loop {}
 }
 
@@ -40,6 +39,7 @@ fn trivial_assertion() {
 fn test_cmos() {
     let mut cmos = ReadRTC::new(0x00, 0x00);
     let time: Time = cmos.read();
+
     serial_println!("second: {}", time.minute);
     serial_println!("minute: {}", time.minute);
     serial_println!("hour: {}", time.hour);
