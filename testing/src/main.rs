@@ -40,12 +40,12 @@ fn test_cmos() {
     let mut cmos = ReadRTC::new(0x00, 0x00);
     let time: Time = cmos.read();
 
-    serial_println!("second: {}", time.minute);
+    serial_println!("second: {}", time.second);
     serial_println!("minute: {}", time.minute);
     serial_println!("hour: {}", time.hour);
     serial_println!("day: {}", time.day);
-    serial_println!("month: {}", time.day);
-    serial_println!("year: {}", time.day);
+    serial_println!("month: {}", time.month);
+    serial_println!("year: {}", time.year);
 
     assert_eq!(time.century, 0);
 }
