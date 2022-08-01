@@ -8,7 +8,6 @@
 //! let time: Time = cmos.read();
 //! ```
 #![no_std]
-#![feature(const_fn)]
 
 use x86_64::instructions::port::Port;
 
