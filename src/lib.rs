@@ -18,6 +18,7 @@ const CMOS_ADDRESS: u16 = 0x70;
 const CMOS_DATA: u16 = 0x71;
 
 /// Struct for storage time
+#[derive(Debug, PartialEq, Eq, Clone, Copy, Default)]
 pub struct Time {
     pub second: u8,
     pub minute: u8,
