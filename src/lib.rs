@@ -9,6 +9,8 @@
 //! ```
 #![no_std]
 
+use core::cmp::Ordering;
+
 use x86_64::instructions::port::Port;
 
 /// Selecting a CMOS register port
@@ -27,6 +29,25 @@ pub struct Time {
     pub month: u8,
     pub year: u8,
     pub century: u8,
+}
+
+impl PartialOrd for Time {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for Time {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.century
+            .cmp(&other.century)
+            .then(self.year.cmp(&other.year))
+            .then(self.month.cmp(&other.month))
+            .then(self.day.cmp(&other.day))
+            .then(self.hour.cmp(&other.hour))
+            .then(self.minute.cmp(&other.minute))
+            .then(self.second.cmp(&other.second))
+    }
 }
 
 /// Struct for storage ports, current year and century register
