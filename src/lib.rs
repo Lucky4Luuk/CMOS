@@ -9,6 +9,8 @@
 //! ```
 #![no_std]
 
+use core::cmp::Ordering;
+
 use x86_64::instructions::port::Port;
 
 /// Selecting a CMOS register port
@@ -18,6 +20,7 @@ const CMOS_ADDRESS: u16 = 0x70;
 const CMOS_DATA: u16 = 0x71;
 
 /// Struct for storage time
+#[derive(Debug, PartialEq, Eq, Clone, Copy, Default)]
 pub struct Time {
     pub second: u8,
     pub minute: u8,
@@ -26,6 +29,25 @@ pub struct Time {
     pub month: u8,
     pub year: u8,
     pub century: u8,
+}
+
+impl PartialOrd for Time {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for Time {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.century
+            .cmp(&other.century)
+            .then(self.year.cmp(&other.year))
+            .then(self.month.cmp(&other.month))
+            .then(self.day.cmp(&other.day))
+            .then(self.hour.cmp(&other.hour))
+            .then(self.minute.cmp(&other.minute))
+            .then(self.second.cmp(&other.second))
+    }
 }
 
 /// Struct for storage ports, current year and century register
@@ -38,6 +60,7 @@ pub struct ReadRTC {
 
 impl ReadRTC {
     /// Creates a new `ReadRTC`.
+    #[must_use]
     pub const fn new(current_year: u8, century_register: u8) -> ReadRTC {
         ReadRTC {
             cmos_address: Port::new(CMOS_ADDRESS),
@@ -67,6 +90,7 @@ impl ReadRTC {
     fn update_time(&mut self) -> Time {
         // Make sure an update isn't in progress
         while self.get_update_in_progress_flag() != 0 {}
+
         Time {
             second: self.get_rtc_register(0x00),
             minute: self.get_rtc_register(0x02),
@@ -74,10 +98,10 @@ impl ReadRTC {
             day: self.get_rtc_register(0x07),
             month: self.get_rtc_register(0x08),
             year: self.get_rtc_register(0x09),
-            century: if self.century_register != 0 {
-                self.get_rtc_register(self.century_register)
-            } else {
+            century: if self.century_register == 0 {
                 0
+            } else {
+                self.get_rtc_register(self.century_register)
             },
         }
     }
@@ -105,7 +129,7 @@ impl ReadRTC {
 
         let register_b = self.get_rtc_register(0x0B);
 
-        if !(register_b & 0x04 != 0) {
+        if register_b & 0x04 == 0 {
             time.second = (time.second & 0x0F) + ((time.second / 16) * 10);
             time.minute = (time.minute & 0x0F) + ((time.minute / 16) * 10);
             time.hour =
@@ -113,6 +137,7 @@ impl ReadRTC {
             time.day = (time.day & 0x0F) + ((time.day / 16) * 10);
             time.month = (time.month & 0x0F) + ((time.month / 16) * 10);
             time.year = (time.year & 0x0F) + ((time.year / 16) * 10);
+
             if self.century_register != 0 {
                 time.century = (time.century & 0x0F) + ((time.century / 16) * 10);
             }
@@ -120,19 +145,20 @@ impl ReadRTC {
 
         // Convert 12 hour clock to 24 hour clock
 
-        if !(register_b & 0x02 != 0) && (time.hour & 0x80 != 0) {
+        if register_b & 0x02 == 0 && (time.hour & 0x80 != 0) {
             time.hour = ((time.hour & 0x7F) + 12) % 24;
         }
 
         // Calculate the full (4-digit) year
 
-        if self.century_register != 0 {
-            time.year += time.century * 100;
-        } else {
+        if self.century_register == 0 {
             time.year += (self.current_year / 100) * 100;
+
             if time.year < self.current_year {
-                time.year += 100
+                time.year += 100;
             };
+        } else {
+            time.year += time.century * 100;
         }
 
         time
