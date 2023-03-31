@@ -8,9 +8,7 @@
 //! let time: Time = cmos.read();
 //! ```
 #![no_std]
-
 use core::cmp::Ordering;
-
 use x86_64::instructions::port::Port;
 
 /// Selecting a CMOS register port
@@ -144,13 +142,11 @@ impl ReadRTC {
         }
 
         // Convert 12 hour clock to 24 hour clock
-
         if register_b & 0x02 == 0 && (time.hour & 0x80 != 0) {
             time.hour = ((time.hour & 0x7F) + 12) % 24;
         }
 
         // Calculate the full (4-digit) year
-
         if self.century_register == 0 {
             time.year += (self.current_year / 100) * 100;
 
