@@ -14,4 +14,4 @@ categories = ["no-std", "os"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-x86_64 = "0.14.10"
+x86_64 = "0.15"
